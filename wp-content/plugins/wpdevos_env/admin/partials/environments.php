@@ -45,7 +45,7 @@ if (!defined('WP_ENV')) {
 
             echo '<div class="env_box" style="background: #fff; width: 33%; float: left; margin: 0 10px 10px 0; padding: 20px 30px;">';
 
-            echo '<input type="text" value="' . $envKey . '" '.( !defined('WP_ENV') && $envKey == 'default' ? 'disabled="disabled"' : '' ).' />';
+            echo '<input class="env_name" type="text" value="' . $envKey . '" '.( !defined('WP_ENV') && $envKey == 'default' ? 'disabled="disabled"' : '' ).' />';
 
             if ($envKey == 'default') {
 

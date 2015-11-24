@@ -50,6 +50,17 @@
                     $('input', row).attr('disabled', false);
                     $('.delete_on_clone', row).remove();
 
+                    $('input.env_name', row).keyup(function() {
+
+                        var envName = $(this).val();
+
+                        $('input[name^=wpdevos_env_settings]', row).each(function(i,v){
+                            var an = $(v).attr('name');
+                            $(v).attr('name', an.replace(/\[(.+?)\]/, '['+envName+']'));
+                        });
+
+                    });
+
                     $('.env_box:last').after(row);
                     break;
 

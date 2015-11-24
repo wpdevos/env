@@ -107,18 +107,29 @@ class wpdevos_env_Admin {
 
                 $dbKeys = array('DB_USER', 'DB_PASSWORD', 'DB_NAME', 'DB_HOST', 'DB_COLLATE', 'DB_CHARSET');
 
-                foreach ($dbKeys as $key) {
-                    $sampleConfig = preg_replace("/REPLACE_$key/", constant($key), $sampleConfig);
+                $settings = get_option('wpdevos_env_settings', false);
+
+                if (isset($settings['envs']) && is_array($settings['envs'])) {
+
+
+                    //TODO
+                    foreach ($dbKeys as $key) {
+                        $sampleConfig = preg_replace("/REPLACE_$key/", constant($key), $sampleConfig);
+                    }
+
+                    file_put_contents(ABSPATH . '.wpdenv.dev.php', $sampleConfig);
+
+                } else {
+
+                    file_put_contents(ABSPATH . '.wpdenv.dev.php', $sampleConfig);
+
+                    /**
+                     * ENV
+                     */
+
+                    $envConfig = preg_replace('@//ENVREPLACE@', "case '".$siteUrl['host']."': ".PHP_EOL." define('WP_ENV', 'dev');".PHP_EOL."break;".PHP_EOL, $envConfig);
+                    file_put_contents(ABSPATH . '.wpdenv.env.php', $envConfig);
                 }
-
-                file_put_contents(ABSPATH . '.wpdenv.dev.php', $sampleConfig);
-
-                /**
-                 * ENV
-                 */
-
-                $envConfig = preg_replace('@//ENVREPLACE@', "case '".$siteUrl['host']."': ".PHP_EOL." define('WP_ENV', 'dev');".PHP_EOL."break;".PHP_EOL, $envConfig);
-                file_put_contents(ABSPATH . '.wpdenv.env.php', $envConfig);
             }
         } );
     }
@@ -177,18 +188,20 @@ class wpdevos_env_Admin {
             }
 
             //get settings from dv
-            $settings = unserialize(get_option('wpdevos_env_settings', false));
+            $settings = get_option('wpdevos_env_settings', false);
 
             //check if settings exists in db
             if ($settings == false) {
                 $settings = $this->getDefaultSettings();
                 $hasConfiguration = false;
             } else {
+                $settings = unserialize($settings);
                 $hasConfiguration = true;
             }
 
             //save form
             if (isset($_POST['wpdevos_env_settings'])) {
+
                 $settings['envs'] = array_merge($settings['envs'], $_POST['wpdevos_env_settings']);
                 update_option('wpdevos_env_settings', serialize($settings));
             }

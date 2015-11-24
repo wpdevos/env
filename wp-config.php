@@ -1,7 +1,7 @@
 <?php
 
 // Absolute path to the WordPress directory
-if  (!defined('ABSPATH')) {
+if (!defined('ABSPATH')) {
     define('ABSPATH', dirname(__FILE__) . '/');
 }
 // Try environment variable 'WP_ENV'
