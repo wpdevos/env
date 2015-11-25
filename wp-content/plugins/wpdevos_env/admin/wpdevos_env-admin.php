@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../src/wpdevos.php';
+
 /**
  * The admin-specific functionality of the plugin.
  *
@@ -60,77 +62,7 @@ class wpdevos_env_Admin {
     {
         add_action( 'wp_ajax_add_foobar', function($a) {
             // Handle request then generate response using WP_Ajax_Response
-
-            global $wpdb;
-
-            if (is_writeable(ABSPATH . 'wp-config.php')) {
-
-                /**
-                 * LOAD FILES
-                 */
-
-                $siteUrl = parse_url(get_option('siteurl'));
-
-                $wpConfig = file_get_contents(__DIR__ . '/envs_skeletons/wp-config.php');
-                $defaultConfig = file_get_contents(__DIR__ . '/envs_skeletons/.wpdenv.default.php');
-                $sampleConfig = file_get_contents(__DIR__ . '/envs_skeletons/.wpdenv.sample.php');
-                $envConfig = file_get_contents(__DIR__ . '/envs_skeletons/.wpdenv.env.php');
-
-                /**
-                 * REPLACE WP-CONFIG
-                 */
-                if (!file_exists(ABSPATH . 'wp-config.backup.php')) {
-                    rename(ABSPATH . 'wp-config.php', ABSPATH . 'wp-config.backup.php');
-                }
-
-                file_put_contents(ABSPATH . 'wp-config.php', $wpConfig);
-
-                /**
-                 * DEFAULT
-                 */
-
-                $newKeys = '';
-
-                $keys = array('AUTH_KEY', 'SECURE_AUTH_KEY', 'LOGGED_IN_KEY', 'NONCE_KEY', 'AUTH_SALT', 'SECURE_AUTH_SALT', 'LOGGED_IN_SALT', 'NONCE_SALT');
-
-                foreach ($keys as $key) {
-                    $newKeys .= "define('$key', '".constant($key)."');" . PHP_EOL;
-                }
-
-                $defaultConfig = preg_replace('/_WP_DEVOS_CONSTANTS_/', $newKeys, $defaultConfig);
-                $defaultConfig = preg_replace('/_WP_DEVOS_TABLE_PREFIX_/', $wpdb->prefix, $defaultConfig);
-                file_put_contents(ABSPATH . '.wpdenv.default.php', $defaultConfig);
-
-                /**
-                 * DEV
-                 */
-
-                $dbKeys = array('DB_USER', 'DB_PASSWORD', 'DB_NAME', 'DB_HOST', 'DB_COLLATE', 'DB_CHARSET');
-
-                $settings = get_option('wpdevos_env_settings', false);
-
-                if (isset($settings['envs']) && is_array($settings['envs'])) {
-
-
-                    //TODO
-                    foreach ($dbKeys as $key) {
-                        $sampleConfig = preg_replace("/REPLACE_$key/", constant($key), $sampleConfig);
-                    }
-
-                    file_put_contents(ABSPATH . '.wpdenv.dev.php', $sampleConfig);
-
-                } else {
-
-                    file_put_contents(ABSPATH . '.wpdenv.dev.php', $sampleConfig);
-
-                    /**
-                     * ENV
-                     */
-
-                    $envConfig = preg_replace('@//ENVREPLACE@', "case '".$siteUrl['host']."': ".PHP_EOL." define('WP_ENV', 'dev');".PHP_EOL."break;".PHP_EOL, $envConfig);
-                    file_put_contents(ABSPATH . '.wpdenv.env.php', $envConfig);
-                }
-            }
+            wpdevos::makeConfigFiles();
         } );
     }
 
@@ -192,7 +124,7 @@ class wpdevos_env_Admin {
 
             //check if settings exists in db
             if ($settings == false) {
-                $settings = $this->getDefaultSettings();
+                $settings = wpdevos::getDefaultSettings();
                 $hasConfiguration = false;
             } else {
                 $settings = unserialize($settings);
@@ -211,31 +143,6 @@ class wpdevos_env_Admin {
 
     }
 
-    private function getDefaultSettings()
-    {
-        $default_env = array(
-            'db' => array(
-                'name' => '',
-                'user' => '',
-                'password' => '',
-                'host' => '',
-                'charset' => '',
-                'collate' => ''
-            ),
-            'wp' => array(
-                'debug' => ''
-            ),
-            'site' => array(
-                'url' => '',
-                'protocol' => '',
-            )
-        );
 
-        return array(
-            'envs' => array(
-                'default' => $default_env
-            )
-        );
-    }
 
 }
